@@ -31,9 +31,8 @@ Serviços sugeridos:
 - [REST](https://pokeapi.co/docs/v2)
 
 ## Requisitos Técnicos
-Deve conter pelo menos um middleware de validação para garantir que:
-- O array do endpoint /unique-array é válido (ex.: não deve aceitar strings ou arrays vazios).
-- Para isso /external-data, simule a resposta com uma função assíncrona.
+- Deve conter pelo menos um middleware de validação para garantir que o array do endpoint `/unique-array` é válido (ex.: não deve aceitar strings ou arrays vazios, etc).
+- Para isso `/external-data` utilize uma API real, implemente tratamentos de erros que a API pode retornar (ex: BadRequest, Timeout, RateLimit, etc)
 - Implementar testes unitários para os endpoints.
 
 ## Pontos Extras
