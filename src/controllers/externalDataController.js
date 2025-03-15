@@ -5,8 +5,8 @@ async function externalDataController(request, reply) {
     const source = request.query.source || 'graphql';
 
     const params = {
-      pokemon: request.query.pokemon,
-      number: request.query.number,
+      pokemon: request.query.pokemon || "pikachu",
+      number: request.query.number || 123,
     };
 
     if ((source === 'graphql' || source === 'rest') && !params.pokemon) {

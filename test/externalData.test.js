@@ -55,7 +55,7 @@ describe('External Data Endpoint - GraphQL Approach', () => {
     axiosMock.post.mockRejectedValue({
       response: {
         status: 404,
-        statusText: 'Not Found'
+        statusText: 'Not Found: No matching data found for your query.'
       }
     });
 
@@ -66,7 +66,7 @@ describe('External Data Endpoint - GraphQL Approach', () => {
 
     expect(response.statusCode).toBe(404);
     const json = JSON.parse(response.payload);
-    expect(json.error).toBe('Not Found');
+    expect(json.error).toBe('Not Found: No matching data found for your query.');
   });
 
   test('should handle timeout error gracefully (GraphQL)', async () => {
@@ -146,7 +146,7 @@ describe('External Data Endpoint - REST Approach', () => {
     axiosMock.get.mockRejectedValue({
       response: {
         status: 404,
-        statusText: 'Not Found'
+        statusText: 'Not Found: No matching data found for your query.'
       }
     });
 
@@ -157,7 +157,7 @@ describe('External Data Endpoint - REST Approach', () => {
 
     expect(response.statusCode).toBe(404);
     const json = JSON.parse(response.payload);
-    expect(json.error).toBe('Not Found');
+    expect(json.error).toBe('Not Found: No matching data found for your query.');
   });
 
   test('should handle timeout error gracefully (REST)', async () => {
@@ -231,7 +231,7 @@ describe('External Data Endpoint - SOAP Approach', () => {
     soapMock.createClientAsync.mockRejectedValue({
       response: {
         status: 404,
-        statusText: 'Not Found'
+        statusText: 'Not Found: No matching data found for your query.'
       }
     });
 
@@ -242,7 +242,7 @@ describe('External Data Endpoint - SOAP Approach', () => {
 
     expect(response.statusCode).toBe(404);
     const json = JSON.parse(response.payload);
-    expect(json.error).toBe('Not Found');
+    expect(json.error).toBe('Not Found: No matching data found for your query.');
   });
 
   test('should handle timeout error gracefully (SOAP)', async () => {
