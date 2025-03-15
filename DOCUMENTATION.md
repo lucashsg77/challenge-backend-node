@@ -250,6 +250,7 @@ To deploy using Terraform:
 ## CI/CD Pipeline
 
 A GitHub Actions workflow is provided to run tests, build your Docker image, and push it to Docker Hub on pushes to the `main` branch. Ensure you configure the necessary secrets (e.g., `DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN`) in your GitHub repository settings.
+At the moment I'm using my personal dockerhub account to test it out.
 
 ## Tests
 
