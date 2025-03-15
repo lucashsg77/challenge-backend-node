@@ -26,7 +26,11 @@ jobs:
         run: npm test
 
       - name: Build Docker Image
-        run: docker build -t challenge-backend-node .
+        run: |
+          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/challenge-backend-node:latest .
+
+      - name: Verify Docker Images
+        run: docker images
 
       - name: Log in to DockerHub
         uses: docker/login-action@v2
