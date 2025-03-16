@@ -59,6 +59,7 @@ This project implements a backend challenge with three main endpoints:
 │       └── uniqueArrayValidator.js          # JSON schema validation for array endpoint
 ├── test
 │   ├── app.test.js                   # Tests for the root endpoint
+│   ├── healthCheck.test.js           # Tests for the /health
 │   ├── externalData.test.js          # Tests for the /external-data endpoint
 │   └── uniqueArray.test.js           # Tests for the /unique-array endpoint
 ├── docker-compose.yml                # Docker Compose file for local development
