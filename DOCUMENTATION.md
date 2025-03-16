@@ -1,5 +1,7 @@
 # Challenge Backend Sr. – Node.js
 
+Link for the video: https://youtu.be/VzFWvg9OLuo
+
 ## Project Overview
 
 This project implements a backend challenge with three main endpoints:
