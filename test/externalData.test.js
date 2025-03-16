@@ -9,8 +9,9 @@ describe('External Data Endpoint - GraphQL Approach', () => {
       post: jest.fn()
     }));
     axiosMock = require('axios');
-    build = require('../src/app');
-    app = build();
+
+    const build = require('../src/app');
+    app = await build({ swagger: false });
     await app.ready();
   });
 
@@ -110,7 +111,7 @@ describe('External Data Endpoint - REST Approach', () => {
     }));
     axiosMock = require('axios');
     build = require('../src/app');
-    app = build();
+    app = await build();
     await app.ready();
   });
 
@@ -201,7 +202,7 @@ describe('External Data Endpoint - SOAP Approach', () => {
     }));
     soapMock = require('soap');
     build = require('../src/app');
-    app = build();
+    app = await build();
     await app.ready();
   });
 

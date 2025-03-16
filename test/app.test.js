@@ -4,7 +4,7 @@ describe('App Root Endpoint', () => {
   let app;
 
   beforeAll(async () => {
-    app = build();
+    app = await build({ swagger: false });
     await app.ready();
   });
 

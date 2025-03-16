@@ -3,8 +3,9 @@ const build = require('../src/app');
 describe('Unique Array Endpoint', () => {
     let app;
     beforeAll(async () => {
-        app = build();
-    });
+        app = await build({ swagger: false });
+        await app.ready();
+      });
     afterAll(async () => {
         await app.close();
     });

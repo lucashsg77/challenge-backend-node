@@ -2,13 +2,13 @@
 
 ## Project Overview
 
-This project implements a backend challenge with two main endpoints:
+This project implements a backend challenge with three main endpoints:
 
 1. **/unique-array** (POST)  
    Receives an array of numbers and returns the unique numbers in sorted order.
 
 2. **/external-data** (GET)  
-   Queries an external Pokémon API using one of three approaches (GraphQL, REST, or SOAP) and returns processed data. The client can specify additional parameters:
+   Queries an external service using one of three approaches (GraphQL, REST, or SOAP) and returns processed data. The client can specify additional parameters:
    - **source**: Specifies the approach to use. Valid values are:
      - `graphql` (default)
      - `rest`
@@ -16,36 +16,57 @@ This project implements a backend challenge with two main endpoints:
    - **pokemon**: For GraphQL and REST endpoints, specifies which Pokémon to query (default is `"pikachu"`).
    - **number**: For the SOAP endpoint, specifies the number to convert to words (default is `123`).
 
+3. **/health** (GET)  
+   Provides health check endpoints with basic and detailed information about the service and its dependencies.
+
+## Key Features
+
+- **Modular Architecture**: Well-organized code structure with clear separation of concerns
+- **Logging System**: Comprehensive logging using Pino
+- **Request Tracing**: Unique request IDs for tracking requests through the system
+- **Rate Limiting**: Protection against excessive requests
+- **API Documentation**: Swagger documentation available at `/documentation`
+- **Error Handling**: Consistent error responses across endpoints
+- **Caching**: In-memory caching for external data requests
+- **Health Checks**: Basic and detailed health checks
+
 ## File Structure
 
 ```
 .
 ├── src
-│   ├── app.js                   # Fastify app definition with route registration
-│   ├── main.js                  # Entry point to start the server
+│   ├── app.js                        # Fastify app definition with route registration
+│   ├── main.js                       # Entry point to start the server
+│   ├── config
+│   │   ├── logger.js                 # Logging configuration using Pino
+│   │   └── swagger.js                # Swagger/OpenAPI configuration
 │   ├── controllers
-│   │   ├── externalDataController.js   # Controller for /external-data endpoint
-│   │   └── uniqueArrayController.js      # Controller for /unique-array endpoint
+│   │   ├── externalDataController.js # Controller for /external-data endpoint
+│   │   └── uniqueArrayController.js  # Controller for /unique-array endpoint
+│   ├── middlewares
+│   │   ├── rateLimiter.js            # Rate limiting configuration
+│   │   └── requestId.js              # Request ID generation and tracking
 │   ├── routes
-│   │   ├── externalData.js        # Route for /external-data endpoint
-│   │   └── uniqueArray.js         # Route for /unique-array endpoint
+│   │   ├── externalData.js           # Route for /external-data endpoint
+│   │   ├── healthCheck.js            # Route for /health endpoints
+│   │   └── uniqueArray.js            # Route for /unique-array endpoint
 │   ├── services
-│   │   ├── externalDataService.js           # Service dispatcher that selects a strategy based on query params
-│   │   ├── externalDataGraphQLService.js      # GraphQL implementation for external data
-│   │   ├── externalDataRestService.js         # REST implementation for external data
-│   │   └── externalDataSoapService.js         # SOAP implementation for external data
+│   │   ├── externalDataService.js           # Service dispatcher that selects a strategy
+│   │   ├── externalDataGraphQLService.js    # GraphQL implementation for external data
+│   │   ├── externalDataRestService.js       # REST implementation for external data
+│   │   └── externalDataSoapService.js       # SOAP implementation for external data
 │   └── validators
-│       └── uniqueArrayValidator.js            # JSON schema validation for /unique-array endpoint
+│       └── uniqueArrayValidator.js          # JSON schema validation for array endpoint
 ├── test
-│   ├── app.test.js              # Tests for the root endpoint
-│   ├── externalData.test.js     # Tests for the /external-data endpoint
-│   └── uniqueArray.test.js      # Tests for the /unique-array endpoint
-├── docker-compose.yml           # Docker Compose file for local development/testing
-├── Dockerfile                   # Docker build file for the project
+│   ├── app.test.js                   # Tests for the root endpoint
+│   ├── externalData.test.js          # Tests for the /external-data endpoint
+│   └── uniqueArray.test.js           # Tests for the /unique-array endpoint
+├── docker-compose.yml                # Docker Compose file for local development
+├── Dockerfile                        # Docker build file for the project
 ├── terraform
-│   └── main.tf                  # Terraform configuration to deploy the containerized application (ECS Fargate example)
-├── DOCUMENTATION.md             # This documentation file
-└── README.md                    # Original challenge readme
+│   └── main.tf                       # Terraform configuration for deployment
+├── DOCUMENTATION.md                  # This documentation file
+└── README.md                         # Original challenge readme
 ```
 
 ## Endpoints
@@ -77,7 +98,7 @@ The `uniqueArrayController` iterates through the provided array using an object 
 ### 2. `/external-data` (GET)
 
 **Description:**  
-Queries an external Pokémon service and returns processed data. This endpoint supports three approaches via the `source` query parameter:
+Queries an external service and returns processed data. This endpoint supports three approaches via the `source` query parameter:
 
 - **GraphQL (default):**  
   Uses the [PokeAPI beta GraphQL endpoint](https://beta.pokeapi.co/graphql/v1beta) to fetch Pokémon data.  
@@ -115,7 +136,93 @@ Queries an external Pokémon service and returns processed data. This endpoint s
   ```
 
 **Controller Implementation:**  
-The `externalDataController` extracts query parameters (`source`, `pokemon`, and `number`) and delegates to the service dispatcher (`externalDataService.js`). The dispatcher selects the appropriate strategy (GraphQL, REST, or SOAP), and each service handles its own caching and response processing.
+The `externalDataController` extracts query parameters and delegates to the service dispatcher (`externalDataService.js`). The dispatcher selects the appropriate strategy, and each service handles its own caching and response processing.
+
+### 3. `/health` (GET)
+
+**Description:**  
+Provides a basic health check with status and timestamp.
+
+**Response Example:**
+
+```json
+{
+  "status": "ok",
+  "timestamp": "2025-03-15T12:00:00.000Z"
+}
+```
+
+### 3.1 `/health/detailed` (GET)
+
+**Description:**  
+Provides a detailed health check including:
+- Server uptime
+- Host information
+- External service statuses (GraphQL, REST, SOAP)
+- Memory usage statistics
+
+**Response Example:**
+
+```json
+{
+  "status": "ok",
+  "timestamp": "2025-03-15T12:00:00.000Z",
+  "uptime": 1234.56,
+  "host": "server-hostname",
+  "services": {
+    "graphql": { "status": "ok" },
+    "rest": { "status": "ok" },
+    "soap": { "status": "ok" }
+  },
+  "memory": {
+    "rss": "45MB",
+    "heapTotal": "32MB",
+    "heapUsed": "25MB"
+  }
+}
+```
+
+## Core Technical Components
+
+### 1. Logging System
+
+The application uses Pino for structured logging with the following features:
+- Log levels configurable via environment variables
+- Pretty printing in development mode
+- JSON output in production
+- Request context enrichment
+- Service identification in logs
+
+### 2. Request Tracking
+
+Every request receives a unique identifier:
+- Generated using UUID v4 if not provided
+- Preserved in request header (`x-request-id`)
+- Included in all log entries related to the request
+- Passed to external services for distributed tracing
+
+### 3. Rate Limiting
+
+Protection against excessive requests with:
+- Configurable request limits via environment variables
+- IP-based rate limiting
+- Structured error responses
+- Detailed logging of rate limit violations
+
+### 4. Error Handling
+
+Consistent error handling throughout the application:
+- Validation errors return 400 with details
+- External service errors map to appropriate HTTP status codes
+- Detailed logging of all errors
+- User-friendly error messages
+
+### 5. Caching
+
+In-memory caching for external data requests:
+- Time-based expiration (60 seconds)
+- Separate caches for each external service
+- Detailed cache hit/miss logging
 
 ## Running the Project
 
@@ -151,79 +258,53 @@ The `externalDataController` extracts query parameters (`source`, `pokemon`, and
 
    This will build and run the container, mapping port `3000` to your local machine.
 
-## Terraform Deployment
+## Environment Variables
 
-The following is an example Terraform configuration (`terraform/main.tf`) to deploy the containerized application on AWS ECS Fargate. Be sure to replace placeholder values (e.g., `<YOUR_ECR_REPO_URI>`, `<YOUR_SUBNET_ID>`, `<YOUR_SECURITY_GROUP_ID>`) with your actual AWS resource identifiers.
+The application can be configured using the following environment variables:
 
-```hcl
-# terraform/main.tf
-provider "aws" {
-  region = "us-east-1"
-}
+| Variable | Description | Default Value |
+|----------|-------------|---------------|
+| `PORT` | Port number for the server | `3000` |
+| `HOST` | Host address to bind to | `0.0.0.0` |
+| `NODE_ENV` | Environment (`development` or `production`) | `development` |
+| `LOG_LEVEL` | Logging level (debug, info, warn, error) | `info` (`debug` in development) |
+| `RATE_LIMIT_MAX` | Maximum requests per window | `100` |
+| `RATE_LIMIT_WINDOW` | Time window for rate limiting | `1 minute` |
 
-resource "aws_ecs_cluster" "app_cluster" {
-  name = "challenge-backend-node-cluster"
-}
+## Testing
 
-resource "aws_iam_role" "ecs_task_execution_role" {
-  name = "ecsTaskExecutionRole"
+The test suite includes the following:
 
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17",
-    Statement = [{
-      Action = "sts:AssumeRole",
-      Effect = "Allow",
-      Principal = {
-        Service = "ecs-tasks.amazonaws.com"
-      }
-    }]
-  })
-}
+- **App Root Endpoint:**  
+  - Verifies that the root endpoint (`GET /`) returns `{ hello: 'world' }`.
 
-resource "aws_iam_role_policy_attachment" "ecs_task_execution_role_policy" {
-  role       = aws_iam_role.ecs_task_execution_role.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
-}
+- **Unique Array Endpoint:**  
+  - Validates that a POST to `/unique-array` returns a sorted array of unique numbers.
+  - Validates error handling for invalid input (e.g., an empty array).
 
-resource "aws_ecs_task_definition" "app_task" {
-  family                   = "challenge-backend-node-task"
-  network_mode             = "awsvpc"
-  requires_compatibilities = ["FARGATE"]
-  cpu                      = "256"
-  memory                   = "512"
-  execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
+- **External Data Endpoint:**  
+  Tests are organized into three describe blocks for each approach:
+  - **GraphQL Approach:**  
+    Tests successful data retrieval and error handling using the GraphQL service.
+  - **REST Approach:**  
+    Tests successful data retrieval and error handling using the REST service.
+  - **SOAP Approach:**  
+    Tests successful data retrieval and error handling using the SOAP service.
 
-  container_definitions = jsonencode([
-    {
-      name      = "challenge-backend-node"
-      image     = "<YOUR_ECR_REPO_URI>:latest",
-      portMappings = [
-        {
-          containerPort = 3000,
-          hostPort      = 3000,
-          protocol      = "tcp"
-        }
-      ],
-      essential = true
-    }
-  ])
-}
+- **Health Check Endpoint:**
+  - Verifies that the basic health check endpoint (`GET /health`) returns status information.
+  - Tests the detailed health check endpoint (`GET /health/detailed`) for comprehensive system status.
+  - Validates that the health check correctly reports service status (ok, degraded, or error).
 
-resource "aws_ecs_service" "app_service" {
-  name            = "challenge-backend-node-service"
-  cluster         = aws_ecs_cluster.app_cluster.id
-  task_definition = aws_ecs_task_definition.app_task.arn
-  desired_count   = 1
-  launch_type     = "FARGATE"
+To run the tests, use:
 
-  network_configuration {
-    subnets         = ["<YOUR_SUBNET_ID>"]
-    security_groups = ["<YOUR_SECURITY_GROUP_ID>"]
-  }
-}
+```bash
+npm test
 ```
 
-### Testing the Terraform Configuration
+## Terraform Deployment
+
+The included Terraform configuration (`terraform/main.tf`) provides an example for deploying the application to AWS ECS Fargate. Be sure to customize the configuration with your actual AWS resource identifiers before deployment.
 
 To deploy using Terraform:
 
@@ -245,37 +326,27 @@ To deploy using Terraform:
    terraform apply
    ```
 
-   Confirm the action when prompted.
+## Security Considerations
 
-## CI/CD Pipeline
+The application implements several security best practices:
+- Rate limiting to prevent abuse
+- Request tracking for audit trails
+- Structured error responses that don't expose sensitive information
+- Validation of all inputs
+- Timeouts on external service calls
 
-A GitHub Actions workflow is provided to run tests, build your Docker image, and push it to Docker Hub on pushes to the `main` branch. Ensure you configure the necessary secrets (e.g., `DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN`) in your GitHub repository settings.
-At the moment I'm using my personal dockerhub account to test it out.
+## Continuous Integration/Continuous Deployment
 
-## Tests
+The project includes a CI/CD pipeline implemented with GitHub Actions for automated testing, building, and deployment.
 
-The test suite includes the following:
+This pipeline automatically:
+- Runs on pushes to the main branch and on pull requests
+- Sets up a Node.js environment
+- Installs dependencies
+- Runs the test suite
+- Builds a Docker image
+- Pushes the image to Docker Hub
 
-- **App Root Endpoint:**  
-  - Verifies that the root endpoint (`GET /`) returns `{ hello: 'world' }`.
-
-- **Unique Array Endpoint:**  
-  - Validates that a POST to `/unique-array` returns a sorted array of unique numbers.
-  - Validates error handling for invalid input (e.g., an empty array).
-
-- **External Data Endpoint:**  
-  Tests are organized into three describe blocks for each approach:
-  - **GraphQL Approach:**  
-    Tests successful data retrieval and error handling using the GraphQL service.
-  - **REST Approach:**  
-    Tests successful data retrieval and error handling using the REST service.
-  - **SOAP Approach:**  
-    Tests successful data retrieval and error handling using the SOAP service.
-
-To run the tests, use:
-
-```bash
-npm test
-```
-
-Test files are located in the `test` folder.
+To use this pipeline, configure the following secrets in your GitHub repository:
+- `DOCKERHUB_USERNAME`: Your Docker Hub username
+- `DOCKERHUB_TOKEN`: A Docker Hub access token with push permissions
